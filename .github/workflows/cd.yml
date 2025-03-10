@@ -1,0 +1,33 @@
+name: Deploy to EC2
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      
+     # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up ssh using key in github secret
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.EC2_PRIVATE_KEY }}
+
+      #  Copy files to EC2 and deploy app
+      - name: Copy files to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ec2-user@54.246.2.44 << 'EOF'
+            cd /home/ec2-user/SimpleApplication
+            git pull origin main
+            # install dependencies and start using pm2
+            npm install
+            pm2 reload all
+          EOF
